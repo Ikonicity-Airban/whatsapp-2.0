@@ -7,22 +7,27 @@ import { auth, db } from "../firebase";
 import MoreVertIcon from "@material-ui/icons/MoreVert";
 import AttachFileIcons from "@material-ui/icons/AttachFile";
 import { useCollection } from "react-firebase-hooks/firestore";
-import InsertEmoticonIcon from "@material-ui/icons/InsertEmoticon";
+// import InsertEmoticonIcon from "@material-ui/icons/InsertEmoticon";
 import MicIcon from "@material-ui/icons/Mic";
 import Message from "./Message";
-import { useRef, useState } from "react";
+import { useRef, useState, useEffect } from "react";
 import firebase from "firebase";
 import getRecipientEmail from "../utils/getRecipientEmail";
 import TimeAgo from "timeago-react";
 import InputEmoji from "react-input-emoji";
-
+// import { ReactMic } from "react-mic";
 // import EmojiPicker from "./EmojiPicker";
+
+//
 
 function ChatScreen({ chat, messages }) {
   const endOfMessagesRef = useRef(null);
   const [user] = useAuthState(auth);
   const router = useRouter();
   const [input, setInput] = useState("");
+  const [isMicShowing, setIsMicShowing] = useState(true);
+  const [record, setRecord] = useState(false);
+  const [audioUrl, setAudioUrl] = useState("");
   const [messageSnapshot] = useCollection(
     db
       .collection("chats")
@@ -54,6 +59,28 @@ function ChatScreen({ chat, messages }) {
       ));
     }
   };
+  // -------------------------------------------//
+  // the record functionality//
+  useEffect(() => {
+    const startRecording = () => {
+      setRecord(true);
+    };
+
+    const stopRecording = () => {
+      setRecord(false);
+    };
+    function onData(recordedBlob) {
+      console.log("chunk of real-time data is: ", recordedBlob);
+    }
+
+    function onStop(recordedBlob) {
+      console.log("recordedBlob is: ", recordedBlob);
+      const { blobURL } = recordedBlob;
+      setAudioUrl(blobURL);
+    }
+  }, []);
+
+  // -----------------------------------------//
 
   const scrollToBottom = () => {
     // if(endOfMessagesRef.current){
@@ -114,6 +141,12 @@ function ChatScreen({ chat, messages }) {
 
   const recipient = recipientSnapshot?.docs?.[0]?.data();
   const recipientEmail = getRecipientEmail(chat.users, user);
+  //
+  //
+  //
+  //
+
+  // return
   return (
     <Container>
       <Header>
@@ -152,6 +185,7 @@ function ChatScreen({ chat, messages }) {
         {showMessages()}
         <EndOfMessage ref={endOfMessagesRef} />
         {/* {"" || } */}
+        <audio src={audioUrl}></audio>
       </MessageContainer>
       <InputContainer>
         <InputEmoji
@@ -163,11 +197,25 @@ function ChatScreen({ chat, messages }) {
           placeholder="Type a message"
           fontFamily="helvetica"
         />
+        {/* <ReactMic
+          record={record}
+          className="sound-wave"
+          onStop={onStop}
+          onData={onData}
+          strokeColor="#000000"
+          backgroundColor="#FF4081"
+        /> */}
+        {/* <button onClick={startRecording} type="button">
+          Start
+        </button>
+        <button onClick={stopRecording} type="button">
+          Stop
+        </button> */}
+        <MicIcon />
         <Button type="submit" onClick={sendMessageFromIcon}>
           <SendIcon />
         </Button>
-        {/*  {true && <MicIcon />}
-         <EmojiPicker /> 
+        {/* <EmojiPicker /> 
         <Input value={input} onChange={(e) => setInput(e.target.value)} /> */}
       </InputContainer>
     </Container>
@@ -175,8 +223,18 @@ function ChatScreen({ chat, messages }) {
 }
 
 export default ChatScreen;
+//
+//
+//
+//
+//
+//
 
-const Container = styled.div``;
+// styles
+const Container = styled.div`
+width: 100vw
+height: 100vh;
+`;
 
 const Header = styled.div`
   position: sticky;
@@ -224,6 +282,7 @@ const InputContainer = styled.form`
   bottom: 0;
   background-color: white;
   z-index: 1000;
+  justify-content: space-between;
 `;
 
 const Input = styled.input`
@@ -236,6 +295,7 @@ const Input = styled.input`
   margin: 0px, 15px, 0px;
 `;
 const Button = styled.button`
+  outline: none;
   border: none;
   background-color: transparent;
 `;
