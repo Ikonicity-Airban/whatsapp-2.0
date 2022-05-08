@@ -1,4 +1,5 @@
 import { Avatar, IconButton } from "@material-ui/core";
+import SendIcon from "@material-ui/icons/Send";
 import { useRouter } from "next/router";
 import { useAuthState } from "react-firebase-hooks/auth";
 import styled from "styled-components";
@@ -66,7 +67,32 @@ function ChatScreen({ chat, messages }) {
 
   const sendMessage = (e) => {
     // e.preventDefault(); // react-emoji-input have their own preventDefault in place
+    if (!input) {
+      return;
+    }
+    //updates last seen;
+    db.collection("user").doc(user.uid).set(
+      {
+        lastSeen: firebase.firestore.FieldValue.serverTimestamp(),
+      },
+      { merge: true }
+    );
 
+    db.collection("chats").doc(router.query.id).collection("messages").add({
+      timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+      message: input,
+      user: user.email,
+      photoURL: user.photoURL,
+    });
+
+    setInput("");
+    scrollToBottom();
+  };
+  const sendMessageFromIcon = (e) => {
+    e.preventDefault(); // react-emoji-input have their own preventDefault in place
+    if (!input) {
+      return;
+    }
     //updates last seen;
     db.collection("user").doc(user.uid).set(
       {
@@ -129,6 +155,7 @@ function ChatScreen({ chat, messages }) {
       </MessageContainer>
       <InputContainer>
         <InputEmoji
+          className="emoji"
           value={input}
           onChange={setInput}
           cleanOnEnter
@@ -136,12 +163,12 @@ function ChatScreen({ chat, messages }) {
           placeholder="Type a message"
           fontFamily="helvetica"
         />
-        <MicIcon />
-        {/* <EmojiPicker /> */}
-        {/* <Input value={input} onChange={(e) => setInput(e.target.value)} />
-        <button hidden disabled={!input} type="submit" onClick={sendMessage}>
-          Send Message
-        </button> */}
+        <Button type="submit" onClick={sendMessageFromIcon}>
+          <SendIcon />
+        </Button>
+        {/*  {true && <MicIcon />}
+         <EmojiPicker /> 
+        <Input value={input} onChange={(e) => setInput(e.target.value)} /> */}
       </InputContainer>
     </Container>
   );
@@ -197,6 +224,10 @@ const InputContainer = styled.form`
   bottom: 0;
   background-color: white;
   z-index: 1000;
+
+  .emoji {
+    background-color: red;
+  }
 `;
 
 const Input = styled.input`
@@ -207,4 +238,8 @@ const Input = styled.input`
   padding: 20px;
   background-color: whitesmoke;
   margin: 0px, 15px, 0px;
+`;
+const Button = styled.button`
+  border: none;
+  background-color: transparent;
 `;
