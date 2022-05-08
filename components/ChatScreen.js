@@ -224,10 +224,6 @@ const InputContainer = styled.form`
   bottom: 0;
   background-color: white;
   z-index: 1000;
-
-  .emoji {
-    background-color: red;
-  }
 `;
 
 const Input = styled.input`
